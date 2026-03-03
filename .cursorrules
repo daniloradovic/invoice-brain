@@ -1,0 +1,102 @@
+# Invoice Brain — Cursor Rules
+
+## Project Context
+This is a Laravel 12 demo application showcasing the first-party Laravel MCP integration.
+The app is a billing/invoicing tool where an AI assistant (Claude via MCP) can
+read billing state and take actions through typed MCP tools and resources.
+
+Package: `laravel/mcp` — first-party, ships with Laravel 12. Always refer to this for MCP patterns.
+
+---
+
+## Laravel Conventions
+
+- PHP 8.3+ syntax always: typed properties, match expressions, readonly where applicable
+- Models use `$fillable` not `$guarded`
+- Always use `->value()` on Enums when storing to DB
+- Money/amounts are ALWAYS stored in cents (integer). Never floats for money.
+- Dates use Carbon. Always return `Carbon` instances from model accessors.
+- Use Form Requests for all HTTP validation
+- Use Resource classes (`JsonResource`) for all API responses
+- Services go in `app/Services/`, one responsibility per service
+- No logic in Controllers — delegate to Services
+
+## Database
+
+- Database: SQLite (file: `database/database.sqlite`)
+- Migrations: always add `->comment()` to non-obvious columns
+- Always define `down()` in migrations properly
+- Foreign keys always have `->constrained()->cascadeOnDelete()` unless noted
+- `status` columns use PHP-backed Enums — define them in `app/Enums/`
+
+## MCP Specific Rules
+
+- MCP Server class lives at `app/Mcp/Servers/InvoiceBrainServer.php`, extends `Laravel\Mcp\Server`
+- All Tool classes live in `app/Mcp/Tools/`, extend `Laravel\Mcp\Server\Tool`
+- All Resource classes live in `app/Mcp/Resources/`, extend `Laravel\Mcp\Server\Resource`
+- Tools and Resources are registered in the Server class `$tools` and `$resources` arrays
+- The server is mounted in `routes/ai.php` — NOT `routes/mcp.php` or `routes/web.php`
+
+- Every Tool MUST have:
+  - `protected string $description` — written for Claude to read, not humans
+  - `public function schema(JsonSchema $schema): array` — fluent schema definition
+  - `public function handle(Request $request): Response` — the action
+  - Be explicit in descriptions about when to use this tool vs similar tools
+
+- Every Resource MUST have:
+  - `protected string $description` — what data this exposes
+  - `public function handle(Request $request): string` — returns JSON string
+  - The JSON string MUST include a `summary` key with a single prose sentence
+
+- Tools use `$request->validate([...])` for input validation (same as HTTP requests)
+- Tools return `Response::text('...')` for success, `Response::error('...')` for failure
+- Resources return `Response::text(json_encode([...]))` — a string, not an array
+- Never throw exceptions from MCP tools or resources — use `Response::error()`
+- Tool names use snake_case via `#[Name('create_invoice')]` attribute or `$name` property
+- Resource URIs follow pattern: `{noun}://list`, `{noun}://{id}`, `{noun}://filter`
+
+## Naming Conventions
+
+- Controllers: `ClientController`, `InvoiceController`
+- Models: singular `Client`, `Invoice`, `WorkLog`
+- MCP Tools: `CreateInvoiceTool`, `SendPaymentReminderTool`
+- MCP Resources: `ClientResource`, `InvoiceResource` (prefix with `Mcp` if conflicts with JsonResource)
+- Enums: `InvoiceStatus`, `InvoicePriority`
+- Services: `InvoiceNumberService`, `InvoicePdfService`
+- Mail: `InvoiceMail`, `PaymentReminderMail`
+
+## Code Style
+
+- No commented-out code
+- No `var_dump`, `dd()`, `dump()` left in committed code (use `ray()` or log)
+- Explicit return types on all methods
+- DocBlocks only when the type system can't express it
+- Prefer early returns over nested if-else
+- Collections over array_* functions always
+
+## Blade / Frontend
+
+- Tailwind CSS utility classes only — no custom CSS files
+- Alpine.js for interactivity — no jQuery, no Vue, no React
+- All layouts extend `layouts.app`
+- Flash messages use `session('success')` and `session('error')`
+- Money display: always format cents → human readable via a `@money` Blade directive
+  defined in `AppServiceProvider`
+
+## Testing
+
+- Pest for all tests
+- Feature tests for MCP tools: assert DB state changed + return value is correct
+- Never test implementation details — test behaviour
+- Use `RefreshDatabase` trait
+- Factories for all models — always
+
+## Do Not
+
+- Do not install `php-mcp/laravel` — the first-party `laravel/mcp` is already included
+- Do not use `php-open-source-saver/phpqrcode` or similar — we don't need QR codes
+- Do not install Livewire — Blade + Alpine is sufficient for this demo
+- Do not add API authentication — this is a local demo app
+- Do not use UUIDs — integer IDs are fine for a demo
+- Do not store computed values that can be derived (e.g. invoice `overdue` status)
+- Do not add soft deletes unless explicitly specified
