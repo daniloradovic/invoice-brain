@@ -12,6 +12,12 @@ use App\Mcp\Resources\InvoiceOverdueResource;
 use App\Mcp\Resources\ReportSummaryResource;
 use App\Mcp\Resources\WorkLogUnbilledClientResource;
 use App\Mcp\Resources\WorkLogUnbilledResource;
+use App\Mcp\Tools\BulkLogWorkTool;
+use App\Mcp\Tools\CreateClientTool;
+use App\Mcp\Tools\CreateInvoiceFromWorklogsTool;
+use App\Mcp\Tools\CreateInvoiceTool;
+use App\Mcp\Tools\LogWorkTool;
+use App\Mcp\Tools\UpdateClientNotesTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
@@ -23,7 +29,12 @@ use Laravel\Mcp\Server\Attributes\Version;
 class InvoiceBrainServer extends Server
 {
     protected array $tools = [
-        //
+        CreateClientTool::class,
+        UpdateClientNotesTool::class,
+        LogWorkTool::class,
+        BulkLogWorkTool::class,
+        CreateInvoiceTool::class,
+        CreateInvoiceFromWorklogsTool::class,
     ];
 
     protected array $resources = [
