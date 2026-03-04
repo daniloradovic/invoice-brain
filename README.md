@@ -1,59 +1,149 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Invoice Brain
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Invoice Brain is a Laravel 12 demo application that showcases the first-party `laravel/mcp` integration. It is a billing and invoicing tool where an AI assistant (Claude via MCP) can read your billing state and take real actions — creating invoices, sending payment reminders, logging work, and generating reports — all through natural conversation.
 
-## About Laravel
+The real point of this project is to demonstrate what MCP makes possible: instead of clicking through a UI, you tell Claude what you need in plain English. Claude reads the live data through MCP resources, reasons about it, and executes the right tools. The web UI exists only to make the data visible; the real power is in the Claude Desktop integration.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Prerequisites
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **PHP 8.3+** with the `sqlite3` and `dom` extensions
+- **Composer**
+- **Claude Desktop** ([download](https://claude.ai/download))
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Installation
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+git clone https://github.com/daniloradovic/invoice-brain.git
+cd invoice-brain
 
-## Laravel Sponsors
+composer install
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+cp .env.example .env
+php artisan key:generate
 
-### Premium Partners
+php artisan migrate --seed
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+This seeds the database with 4 demo clients, several invoices in various states, and unbilled work logs ready to invoice.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Web UI
 
-## Code of Conduct
+Start the development server:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan serve
+```
 
-## Security Vulnerabilities
+Visit [http://localhost:8000](http://localhost:8000) to see the dashboard with revenue stats, overdue invoices, and draft invoices.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## Claude Desktop Setup
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Invoice Brain uses the `laravel/mcp` stdio transport — no separate server process needed. Claude Desktop spawns the process directly.
+
+Add the following to your `claude_desktop_config.json`:
+
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "invoice-brain": {
+      "command": "php",
+      "args": ["artisan", "mcp:serve", "invoice-brain"],
+      "cwd": "/ABSOLUTE/PATH/TO/invoice-brain",
+      "env": { "APP_ENV": "local" }
+    }
+  }
+}
+```
+
+> **Important:** Replace `/ABSOLUTE/PATH/TO/invoice-brain` with the actual absolute path to your project directory (e.g. `/Users/yourname/projects/invoice-brain`). The server name `invoice-brain` must match the `Mcp::local()` name registered in `routes/ai.php`.
+
+Restart Claude Desktop after editing the config. You should see a green "invoice-brain" badge in the Claude Desktop toolbar when the connection is live.
+
+---
+
+## Demo Prompts
+
+Copy and paste these into Claude Desktop to explore the integration:
+
+**1. Get a full overview**
+```
+Give me a full picture of where things stand right now — clients, outstanding invoices, overdue amounts, and any unbilled work that should be invoiced.
+```
+
+**2. Chase overdue payments**
+```
+Send payment reminders to all overdue invoices. Use a professional but firm tone and mention that payment is now past due.
+```
+
+**3. Invoice unbilled work**
+```
+Bright Studio has unbilled work logs. Create an invoice for all of them and tell me the total.
+```
+
+**4. Log work, then invoice and send**
+```
+Log 3 hours for TechStart today for "Sprint planning and backlog refinement". Then create an invoice for all their unbilled work and send it to them.
+```
+
+**5. Mark a payment as received**
+```
+Acme Corp just paid their oldest overdue invoice. Mark it as paid with today's date and tell me how much we collected.
+```
+
+**6. Revenue and client performance report**
+```
+Give me a revenue summary for this year so far. Which client has generated the most revenue? Are there any clients with a poor payment track record?
+```
+
+---
+
+## MCP Resources Reference
+
+These are the read-only data sources Claude uses to understand the current state before taking action.
+
+| URI | Description |
+|-----|-------------|
+| `clients://list` | All clients with invoice counts, overdue counts, and unbilled hours |
+| `clients://{id}` | Single client detail with all invoices and work logs |
+| `invoices://list` | All invoices with client name, total, status, and dates |
+| `invoices://{id}` | Single invoice with client, line items, and overdue status |
+| `invoices://outstanding` | Invoices with status `sent` or `overdue`, sorted by due date |
+| `invoices://overdue` | Overdue invoices with calculated `days_overdue` field |
+| `invoices://draft` | Draft invoices not yet sent to clients |
+| `worklogs://unbilled` | All unbilled work logs grouped by client |
+| `worklogs://unbilled/{client_id}` | Unbilled work logs for a single client |
+| `reports://summary` | Aggregated revenue stats: YTD invoiced, collected, outstanding, overdue |
+
+---
+
+## MCP Tools Reference
+
+These are the actions Claude can take on your behalf.
+
+| Tool | What it does |
+|------|-------------|
+| `create_client` | Creates a new client with name, email, rate, and payment terms |
+| `update_client_notes` | Appends a timestamped note to a client record |
+| `log_work` | Logs a single unbilled work entry for a client |
+| `bulk_log_work` | Logs multiple work entries in one call |
+| `create_invoice` | Creates an invoice with explicit line items |
+| `create_invoice_from_worklogs` | Creates an invoice from existing unbilled work logs and marks them as billed |
+| `send_invoice` | Emails a draft invoice to the client as a PDF attachment and marks it sent |
+| `mark_invoice_paid` | Records an invoice as paid with an optional payment date |
+| `add_line_item` | Adds a line item to an existing draft invoice |
+| `send_payment_reminder` | Sends a payment reminder email for an outstanding or overdue invoice |
+| `bulk_send_reminders` | Sends reminders to all overdue invoices above a threshold, skipping recently reminded ones |
+| `cancel_invoice` | Cancels an invoice and unbills any attached work logs so they can be re-invoiced |
+| `get_revenue_report` | Returns revenue stats for a given period (this month, last month, this year, last year) |
+| `get_client_report` | Returns lifetime revenue, average invoice size, average days to pay, and unbilled work for a client |
