@@ -12,11 +12,19 @@ use App\Mcp\Resources\InvoiceOverdueResource;
 use App\Mcp\Resources\ReportSummaryResource;
 use App\Mcp\Resources\WorkLogUnbilledClientResource;
 use App\Mcp\Resources\WorkLogUnbilledResource;
+use App\Mcp\Tools\AddLineItemTool;
 use App\Mcp\Tools\BulkLogWorkTool;
+use App\Mcp\Tools\BulkSendRemindersTool;
+use App\Mcp\Tools\CancelInvoiceTool;
 use App\Mcp\Tools\CreateClientTool;
 use App\Mcp\Tools\CreateInvoiceFromWorklogsTool;
 use App\Mcp\Tools\CreateInvoiceTool;
+use App\Mcp\Tools\GetClientReportTool;
+use App\Mcp\Tools\GetRevenueReportTool;
 use App\Mcp\Tools\LogWorkTool;
+use App\Mcp\Tools\MarkInvoicePaidTool;
+use App\Mcp\Tools\SendInvoiceTool;
+use App\Mcp\Tools\SendPaymentReminderTool;
 use App\Mcp\Tools\UpdateClientNotesTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
@@ -35,6 +43,14 @@ class InvoiceBrainServer extends Server
         BulkLogWorkTool::class,
         CreateInvoiceTool::class,
         CreateInvoiceFromWorklogsTool::class,
+        SendInvoiceTool::class,
+        MarkInvoicePaidTool::class,
+        AddLineItemTool::class,
+        SendPaymentReminderTool::class,
+        BulkSendRemindersTool::class,
+        CancelInvoiceTool::class,
+        GetRevenueReportTool::class,
+        GetClientReportTool::class,
     ];
 
     protected array $resources = [
