@@ -35,7 +35,7 @@ class InvoiceDetailResource extends Resource implements HasUriTemplate
             'total_cents' => $item->total,
         ])->values()->all();
 
-        $daysOverdue = $invoice->is_overdue ? (int) now()->diffInDays($invoice->due_at) : 0;
+        $daysOverdue = $invoice->is_overdue ? (int) $invoice->due_at->diffInDays(now()) : 0;
 
         $summaryParts = ["Invoice {$invoice->invoice_number} for {$invoice->client->name}. " . MoneyService::format($invoice->total) . '.'];
         if ($invoice->is_overdue) {

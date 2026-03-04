@@ -30,7 +30,7 @@ class ClientListResource extends Resource
                 'email'                   => $client->email,
                 'default_rate_formatted'  => $client->default_rate ? MoneyService::format($client->default_rate) : null,
                 'payment_terms'           => $client->payment_terms,
-                'open_invoices_count'     => $client->invoices->whereIn('status', [InvoiceStatus::Sent->value, InvoiceStatus::Overdue->value])->count(),
+                'open_invoices_count'     => $client->invoices->whereIn('status', [InvoiceStatus::Sent, InvoiceStatus::Overdue])->count(),
                 'overdue_invoices_count'  => $overdueCount,
                 'unbilled_hours'          => (float) $client->workLogs->where('status', 'unbilled')->sum('hours'),
                 'notes'                   => $client->notes,

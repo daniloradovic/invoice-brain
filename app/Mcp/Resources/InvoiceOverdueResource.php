@@ -35,7 +35,7 @@ class InvoiceOverdueResource extends Resource
             'total_cents'    => $invoice->total,
             'status'         => $invoice->status->value,
             'due_at'         => $invoice->due_at?->toDateString(),
-            'days_overdue'   => (int) now()->diffInDays($invoice->due_at),
+            'days_overdue'   => (int) $invoice->due_at->diffInDays(now()),
         ])->values()->all();
 
         $count      = count($data);
