@@ -1,5 +1,6 @@
 <?php
 
+use App\Mcp\Servers\InvoiceBrainServer;
 use Laravel\Mcp\Facades\Mcp;
 
-// Mcp::web('/mcp/demo', \App\Mcp\Servers\PublicServer::class);
+Mcp::local('invoice-brain', InvoiceBrainServer::class);
