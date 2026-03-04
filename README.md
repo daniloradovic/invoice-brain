@@ -147,3 +147,78 @@ These are the actions Claude can take on your behalf.
 | `cancel_invoice` | Cancels an invoice and unbills any attached work logs so they can be re-invoiced |
 | `get_revenue_report` | Returns revenue stats for a given period (this month, last month, this year, last year) |
 | `get_client_report` | Returns lifetime revenue, average invoice size, average days to pay, and unbilled work for a client |
+
+---
+
+## Railway Deployment
+
+Deploy Invoice Brain to [Railway](https://railway.app) to run it in the cloud with HTTP/SSE transport, so Claude Desktop can connect from anywhere.
+
+### Prerequisites
+
+- [Railway CLI](https://docs.railway.app/guides/cli): `npm install -g @railway/cli`
+- A Railway account
+
+### Steps
+
+**1. Create a Railway project and add a PostgreSQL database plugin.**
+
+Railway injects a `DATABASE_URL` environment variable automatically — no manual DB config needed.
+
+**2. Set the required environment variables in the Railway dashboard:**
+
+```
+APP_KEY=          # generate with: php artisan key:generate --show
+APP_ENV=production
+APP_URL=https://YOUR-APP.up.railway.app
+DB_CONNECTION=pgsql
+```
+
+**3. Deploy:**
+
+```bash
+railway login
+railway init   # link to your Railway project
+railway up
+```
+
+**4. Get your MCP token from the deploy logs.**
+
+After each deploy, the release command runs `php artisan mcp:token` which prints:
+
+```
+Your MCP token: {token}
+Add this as a Bearer token in your MCP client config.
+```
+
+Open the Railway dashboard → your service → **Deploy logs** to copy the token.
+
+> Demo data is re-seeded on every deploy via `DemoDataSeeder`, giving you a fresh, consistent state for demos.
+
+**5. Connect Claude Desktop to the live app.**
+
+Update `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "invoice-brain": {
+      "url": "https://YOUR-APP.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR-TOKEN-FROM-DEPLOY-LOGS"
+      }
+    }
+  }
+}
+```
+
+Replace `YOUR-APP` and `YOUR-TOKEN` with real values. Restart Claude Desktop — you should see the green invoice-brain badge.
+
+### Local vs. Railway transport
+
+`routes/ai.php` controls which transport is active:
+
+- **Local dev (stdio):** uncomment `Mcp::local(...)` and comment out `Mcp::web(...)`
+- **Railway (HTTP/SSE):** `Mcp::web(...)` active (the default in this repo)
+
+This is a one-line change when switching between environments.
