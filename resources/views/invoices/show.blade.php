@@ -9,7 +9,7 @@
                 <div>
                     <div class="flex items-center gap-3 mb-2">
                         <h2 class="text-xl font-bold text-gray-900">{{ $invoice->invoice_number }}</h2>
-                        @include('partials.status-badge', ['status' => $invoice->status])
+                        <x-status-badge :status="$invoice->status" />
                     </div>
                     <a href="{{ route('clients.show', $invoice->client) }}"
                        class="text-gray-600 hover:text-indigo-600 font-medium">

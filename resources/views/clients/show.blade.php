@@ -79,7 +79,7 @@
                                     <tr class="hover:bg-gray-50 transition-colors">
                                         <td class="px-5 py-3 font-medium text-gray-900">{{ $invoice->invoice_number }}</td>
                                         <td class="px-5 py-3">
-                                            @include('partials.status-badge', ['status' => $invoice->status])
+                                            <x-status-badge :status="$invoice->status" />
                                         </td>
                                         <td class="px-5 py-3 text-right font-semibold">@money($invoice->total)</td>
                                         <td class="px-5 py-3 text-gray-500">{{ $invoice->issued_at->format('M j, Y') }}</td>

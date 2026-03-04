@@ -56,7 +56,7 @@
                             </td>
                             <td class="px-5 py-3 text-right font-semibold text-gray-900">@money($invoice->total)</td>
                             <td class="px-5 py-3">
-                                @include('partials.status-badge', ['status' => $invoice->status])
+                                <x-status-badge :status="$invoice->status" />
                             </td>
                             <td class="px-5 py-3 text-gray-500">{{ $invoice->issued_at->format('M j, Y') }}</td>
                             <td class="px-5 py-3 text-gray-500">
